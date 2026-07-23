@@ -6,10 +6,10 @@
 #include <string>
 
 #include "delivery_robot_interfaces/msg/robot_state.hpp"
-#include "delivery_robot_interfaces/msg/speed_violation.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "traffic_police_interfaces/msg/speed_violation.hpp"
 
 namespace
 {
@@ -48,7 +48,7 @@ public:
     }
 
     violation_publisher_ =
-      create_publisher<delivery_robot_interfaces::msg::SpeedViolation>(
+      create_publisher<traffic_police_interfaces::msg::SpeedViolation>(
       kViolationTopic, reliable_topic_qos());
     camera_subscription_ = create_subscription<sensor_msgs::msg::Image>(
       kCameraTopic, rclcpp::SensorDataQoS(),
@@ -77,7 +77,7 @@ private:
       return;
     }
 
-    delivery_robot_interfaces::msg::SpeedViolation violation;
+    traffic_police_interfaces::msg::SpeedViolation violation;
     violation.header = message->header;
     violation.robot_id = message->robot_id;
     violation.pose = message->pose;
@@ -97,7 +97,7 @@ private:
   double speed_limit_;
   bool has_camera_image_{false};
 
-  rclcpp::Publisher<delivery_robot_interfaces::msg::SpeedViolation>::SharedPtr
+  rclcpp::Publisher<traffic_police_interfaces::msg::SpeedViolation>::SharedPtr
     violation_publisher_;
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr camera_subscription_;
   rclcpp::Subscription<delivery_robot_interfaces::msg::RobotState>::SharedPtr

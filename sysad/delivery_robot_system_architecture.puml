@@ -17,7 +17,7 @@ node "ROS2 Jazzy" as environment {
 
   package "traffic_police_node\n\nSubscribes:\n1. /delivery_robot/camera/image_raw\n2. /delivery_robot/state\n\nPublishes:\n1. /traffic_police/speed_violation" as Police
 
-  queue "/traffic_police/speed_violation\ndelivery_robot_interfaces/msg/SpeedViolation" as ViolationTopic
+  queue "/traffic_police/speed_violation\ntraffic_police_interfaces/msg/SpeedViolation" as ViolationTopic
 
   Robot --> CameraTopic : publish
   Robot --> StateTopic : publish

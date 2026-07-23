@@ -11,13 +11,14 @@ The traffic-police node is read-only toward robot motion and does not control th
 
 ## ROS 2 Packages
 
-The workspace contains three packages:
+The workspace contains four packages:
 
 ```text
 ws/
 └── src/
     ├── delivery_robot_interfaces/
     ├── delivery_robot/
+    ├── traffic_police_interfaces/
     └── traffic_police/
 ```
 
@@ -28,6 +29,13 @@ Contains custom ROS 2 message definitions.
 Messages:
 
 - `RobotState.msg`
+
+### `traffic_police_interfaces`
+
+Contains custom ROS 2 message definitions owned by the traffic-police domain.
+
+Messages:
+
 - `SpeedViolation.msg`
 
 ### `delivery_robot`
@@ -77,7 +85,7 @@ Publishes:
 
 | Topic | Message type | QoS | Description |
 |---|---|---|---|
-| `/traffic_police/speed_violation` | `delivery_robot_interfaces/msg/SpeedViolation` | Reliable, volatile, depth 10 | Speeding event and evidence information |
+| `/traffic_police/speed_violation` | `traffic_police_interfaces/msg/SpeedViolation` | Reliable, volatile, depth 10 | Speeding event and evidence information |
 
 ## Parameters
 

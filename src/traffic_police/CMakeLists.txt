@@ -11,6 +11,7 @@ find_package(delivery_robot_interfaces REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(traffic_police_interfaces REQUIRED)
 
 add_executable(traffic_police_node src/traffic_police_node.cpp)
 target_include_directories(traffic_police_node PUBLIC
@@ -23,6 +24,7 @@ ament_target_dependencies(
   "rcl_interfaces"
   "rclcpp"
   "sensor_msgs"
+  "traffic_police_interfaces"
 )
 
 install(TARGETS traffic_police_node
