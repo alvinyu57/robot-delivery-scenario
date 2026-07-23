@@ -59,25 +59,47 @@ Responsibilities:
 
 Publishes:
 
-| Topic | Message type | Description |
-|---|---|---|
-| `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Raw image from the robot camera |
-| `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Robot pose, speed, and delivery state |
+| Topic | Message type | QoS | Description |
+|---|---|---|---|
+| `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Sensor data: best effort, volatile, depth 5 | Raw image from the robot camera |
+| `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Reliable, volatile, depth 10 | Robot pose, speed, and delivery state |
 
 ### `traffic_police_node`
 
 Subscribes:
 
-| Topic | Message type | Description |
-|---|---|---|
-| `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Robot camera stream |
-| `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Robot position and speed |
+| Topic | Message type | QoS | Description |
+|---|---|---|---|
+| `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Sensor data: best effort, volatile, depth 5 | Robot camera stream |
+| `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Reliable, volatile, depth 10 | Robot position and speed |
 
 Publishes:
 
-| Topic | Message type | Description |
-|---|---|---|
-| `/traffic_police/speed_violation` | `delivery_robot_interfaces/msg/SpeedViolation` | Speeding event and evidence information |
+| Topic | Message type | QoS | Description |
+|---|---|---|---|
+| `/traffic_police/speed_violation` | `delivery_robot_interfaces/msg/SpeedViolation` | Reliable, volatile, depth 10 | Speeding event and evidence information |
+
+## Parameters
+
+Parameters are configured at node startup and marked read-only so accepted values cannot
+silently diverge from the active publishers, subscriptions, or timer.
+
+### `delivery_robot_node`
+
+| Parameter | Type | Default | Validation |
+|---|---|---|---|
+| `robot_id` | string | `delivery_robot` | Non-empty |
+| `frame_id` | string | `map` | Non-empty |
+| `camera_frame_id` | string | `camera_link` | Non-empty |
+| `linear_speed` | double | `1.0` | Finite float32 value |
+| `angular_speed` | double | `0.0` | Finite float32 value |
+| `publish_rate_hz` | double | `10.0` | Greater than 0 and at most 1000 |
+
+### `traffic_police_node`
+
+| Parameter | Type | Default | Validation |
+|---|---|---|---|
+| `speed_limit` | double | `0.5` | Non-negative finite float32 value |
 
 ## Custom Messages
 

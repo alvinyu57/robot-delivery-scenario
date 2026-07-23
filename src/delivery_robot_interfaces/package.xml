@@ -3,7 +3,7 @@
 <package format="3">
   <name>delivery_robot_interfaces</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Message definitions shared by the delivery robot and traffic police nodes.</description>
   <maintainer email="ubuntu@todo.todo">ubuntu</maintainer>
   <license>Apache-2.0</license>
 

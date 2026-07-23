@@ -8,6 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(delivery_robot_interfaces REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
@@ -19,6 +20,7 @@ target_compile_features(delivery_robot_node PUBLIC c_std_99 cxx_std_17)  # Requi
 ament_target_dependencies(
   delivery_robot_node
   "delivery_robot_interfaces"
+  "rcl_interfaces"
   "rclcpp"
   "sensor_msgs"
 )
