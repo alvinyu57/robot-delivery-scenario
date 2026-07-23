@@ -7,11 +7,11 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(delivery_robot_interfaces REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(delivery_robot_interfaces REQUIRED)
-find_package(cv_bridge REQUIRED)
-find_package(image_transport REQUIRED)
+find_package(traffic_police_interfaces REQUIRED)
 
 add_executable(traffic_police_node src/traffic_police_node.cpp)
 target_include_directories(traffic_police_node PUBLIC
@@ -20,11 +20,11 @@ target_include_directories(traffic_police_node PUBLIC
 target_compile_features(traffic_police_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 ament_target_dependencies(
   traffic_police_node
+  "delivery_robot_interfaces"
+  "rcl_interfaces"
   "rclcpp"
   "sensor_msgs"
-  "delivery_robot_interfaces"
-  "cv_bridge"
-  "image_transport"
+  "traffic_police_interfaces"
 )
 
 install(TARGETS traffic_police_node
