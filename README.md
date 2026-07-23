@@ -85,6 +85,19 @@ Publishes:
 The Gazebo bridge, rather than `delivery_robot_node`, publishes the camera
 stream on `/delivery_robot/camera/image_raw`.
 
+### Gazebo bridge
+
+| Topic | ROS 2 message type | Direction |
+|---|---|---|
+| `/clock` | `rosgraph_msgs/msg/Clock` | Gazebo → ROS 2 |
+| `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Gazebo → ROS 2 |
+| `/delivery_robot/camera/camera_info` | `sensor_msgs/msg/CameraInfo` | Gazebo → ROS 2 |
+| `/delivery_robot/odom` | `nav_msgs/msg/Odometry` | Gazebo → ROS 2 |
+| `/delivery_robot/tf` | `tf2_msgs/msg/TFMessage` | Gazebo → ROS 2 |
+| `/delivery_robot/cmd_vel` | `geometry_msgs/msg/Twist` | ROS 2 → Gazebo |
+| `/scan` | `sensor_msgs/msg/LaserScan` | Gazebo → ROS 2 |
+| `/imu` | `sensor_msgs/msg/Imu` | Gazebo → ROS 2 |
+
 ### `traffic_police_node`
 
 Subscribes:
