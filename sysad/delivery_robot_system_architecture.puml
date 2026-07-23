@@ -1,0 +1,51 @@
+@startuml robot_delivery_scenario
+title Robot Delivery Scenario
+
+left to right direction
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam defaultTextAlignment center
+
+node "ROS2 Jazzy" as environment {
+
+  package "delivery_robot_node\n\nPublishes:\n1. /delivery_robot/camera/image_raw\n2. /delivery_robot/state" as Robot
+
+  queue "/delivery_robot/camera/image_raw\nsensor_msgs/msg/Image" as CameraTopic
+
+  queue "/delivery_robot/state\ndelivery_interfaces/msg/RobotState" as StateTopic
+
+  package "traffic_police_node\n\nSubscribes:\n1. /delivery_robot/camera/image_raw\n2. /delivery_robot/state\n\nPublishes:\n1. /traffic_police/speed_violation" as Police
+
+  queue "/traffic_police/speed_violation\ndelivery_interfaces/msg/SpeedViolation" as ViolationTopic
+
+  Robot --> CameraTopic : publish
+  Robot --> StateTopic : publish
+
+  CameraTopic --> Police : subscribe
+  StateTopic --> Police : subscribe
+
+  Police --> ViolationTopic : publish
+
+  note top of Robot
+  RobotState contains:
+  - robot_id
+  - pose
+  - linear_speed
+  - angular_speed
+  end note
+
+  note top of Police
+  The speed limit is a local parameter
+  of traffic_police_node.
+
+  The robot does not subscribe to any
+  traffic-police topic.
+  end note
+
+
+}
+
+
+
+@enduml
