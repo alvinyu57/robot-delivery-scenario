@@ -10,8 +10,6 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(delivery_robot_interfaces REQUIRED)
-find_package(cv_bridge REQUIRED)
-find_package(image_transport REQUIRED)
 
 add_executable(traffic_police_node src/traffic_police_node.cpp)
 target_include_directories(traffic_police_node PUBLIC
@@ -23,8 +21,6 @@ ament_target_dependencies(
   "rclcpp"
   "sensor_msgs"
   "delivery_robot_interfaces"
-  "cv_bridge"
-  "image_transport"
 )
 
 install(TARGETS traffic_police_node

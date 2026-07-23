@@ -16,12 +16,12 @@ The workspace contains three packages:
 ```text
 ws/
 └── src/
-    ├── delivery_interfaces/
+    ├── delivery_robot_interfaces/
     ├── delivery_robot/
     └── traffic_police/
 ```
 
-### `delivery_interfaces`
+### `delivery_robot_interfaces`
 
 Contains custom ROS 2 message definitions.
 
@@ -62,7 +62,7 @@ Publishes:
 | Topic | Message type | Description |
 |---|---|---|
 | `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Raw image from the robot camera |
-| `/delivery_robot/state` | `delivery_interfaces/msg/RobotState` | Robot pose, speed, and delivery state |
+| `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Robot pose, speed, and delivery state |
 
 ### `traffic_police_node`
 
@@ -71,13 +71,13 @@ Subscribes:
 | Topic | Message type | Description |
 |---|---|---|
 | `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Robot camera stream |
-| `/delivery_robot/state` | `delivery_interfaces/msg/RobotState` | Robot position and speed |
+| `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Robot position and speed |
 
 Publishes:
 
 | Topic | Message type | Description |
 |---|---|---|
-| `/traffic_police/speed_violation` | `delivery_interfaces/msg/SpeedViolation` | Speeding event and evidence information |
+| `/traffic_police/speed_violation` | `delivery_robot_interfaces/msg/SpeedViolation` | Speeding event and evidence information |
 
 ## Custom Messages
 
@@ -136,4 +136,3 @@ string evidence_path
     ./scripts/build-package.sh --docker # Build inside the Docker container
     ./scripts/build-package.sh --test # Build and run tests
     ```
-
