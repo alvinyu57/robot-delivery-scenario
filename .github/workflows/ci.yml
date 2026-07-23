@@ -27,15 +27,9 @@ jobs:
 
       - name: Build ROS2 docker image
         run: |
-          ./build-docker-image.sh
+          ./scripts/build-docker-image.sh
 
-      - name: Build package
+      - name: Build package and run tests
         run: |
-          colcon build
-      
-      - name: Test
-        run: |
-          colcon test
-          colcon test-result --verbose
-
+          ./scripts/build-package.sh --docker --test
   

@@ -3,7 +3,7 @@ An imaginary scenario of robot delivery
 
 ## Project Goal
 
-The delivery robot moves from point A to point B and publishes its camera image and current state.
+The delivery robot moves autonomously from point A to point B and publishes its camera image and current state.
 
 The traffic-police node observes the robot remotely, checks whether the robot exceeds the configured speed limit, and publishes a speed-violation event.
 
