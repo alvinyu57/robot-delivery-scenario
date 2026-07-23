@@ -10,7 +10,6 @@ find_package(ament_cmake REQUIRED)
 find_package(delivery_robot_interfaces REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
 
 add_executable(delivery_robot_node src/delivery_robot_node.cpp)
 target_include_directories(delivery_robot_node PUBLIC
@@ -22,7 +21,6 @@ ament_target_dependencies(
   "delivery_robot_interfaces"
   "rcl_interfaces"
   "rclcpp"
-  "sensor_msgs"
 )
 
 install(TARGETS delivery_robot_node

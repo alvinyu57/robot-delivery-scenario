@@ -45,7 +45,6 @@ Contains `delivery_robot_node`.
 
 Responsibilities:
 
-- Publish the robot camera image.
 - Publish the robot pose and motion state.
 - Publish the current delivery state.
 
@@ -69,7 +68,9 @@ Contains the robot descriptions and Gazebo scenario:
 - Xacro descriptions for delivery robot A and traffic police P.
 - Delivery area B.
 - A closed L-shaped room with a small wall near B.
-- ROS 2 bridges for camera, odometry, transforms, clock, and velocity commands.
+- Gazebo camera sensor publishing real 800×600 RGB images.
+- ROS 2 bridges for camera images and metadata, odometry, transforms, clock,
+  laser scans, IMU data, and velocity commands.
 
 ## Nodes and Topics
 
@@ -79,8 +80,10 @@ Publishes:
 
 | Topic | Message type | QoS | Description |
 |---|---|---|---|
-| `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Sensor data: best effort, volatile, depth 5 | Raw image from the robot camera |
 | `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Reliable, volatile, depth 10 | Robot pose, speed, and delivery state |
+
+The Gazebo bridge, rather than `delivery_robot_node`, publishes the camera
+stream on `/delivery_robot/camera/image_raw`.
 
 ### `traffic_police_node`
 
@@ -108,7 +111,6 @@ silently diverge from the active publishers, subscriptions, or timer.
 |---|---|---|---|
 | `robot_id` | string | `delivery_robot` | Non-empty |
 | `frame_id` | string | `map` | Non-empty |
-| `camera_frame_id` | string | `camera_link` | Non-empty |
 | `linear_speed` | double | `1.0` | Finite float32 value |
 | `angular_speed` | double | `0.0` | Finite float32 value |
 | `publish_rate_hz` | double | `10.0` | Greater than 0 and at most 1000 |
