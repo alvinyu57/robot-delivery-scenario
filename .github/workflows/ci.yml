@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    name: Build and test ROS 2 package
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build ROS2 docker image
+        run: |
+          ./build-docker-image.sh
+
+      - name: Build package
+        run: |
+          colcon build
+      
+      - name: Test
+        run: |
+          colcon test
+          colcon test-result --verbose
+
+  
