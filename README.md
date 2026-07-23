@@ -11,7 +11,7 @@ The traffic-police node is read-only toward robot motion and does not control th
 
 ## ROS 2 Packages
 
-The workspace contains four packages:
+The workspace contains five packages:
 
 ```text
 ws/
@@ -19,7 +19,8 @@ ws/
     ├── delivery_robot_interfaces/
     ├── delivery_robot/
     ├── traffic_police_interfaces/
-    └── traffic_police/
+    ├── traffic_police/
+    └── delivery_robot_description/
 ```
 
 ### `delivery_robot_interfaces`
@@ -60,6 +61,15 @@ Responsibilities:
 - Detect speeding.
 - Publish a speed-violation event.
 - Optionally save an evidence image.
+
+### `delivery_robot_description`
+
+Contains the robot descriptions and Gazebo scenario:
+
+- Xacro descriptions for delivery robot A and traffic police P.
+- Delivery area B.
+- A closed L-shaped room with a small wall near B.
+- ROS 2 bridges for camera, odometry, transforms, clock, and velocity commands.
 
 ## Nodes and Topics
 
@@ -166,3 +176,20 @@ string evidence_path
     ./scripts/build-package.sh --docker # Build inside the Docker container
     ./scripts/build-package.sh --test # Build and run tests
     ```
+
+4. Start the Gazebo scenario from the development container:
+
+    ```bash
+    ./scripts/run-simulation.sh
+    ```
+
+    Set `GUI=false` for a headless server:
+
+    ```bash
+    GUI=false ./scripts/run-simulation.sh
+    ```
+
+The simulation publishes `/delivery_robot/camera/image_raw`,
+`/delivery_robot/camera/camera_info`, `/delivery_robot/odom`, and
+`/delivery_robot/tf`. Send `geometry_msgs/msg/Twist` commands to
+`/delivery_robot/cmd_vel` to move robot A.

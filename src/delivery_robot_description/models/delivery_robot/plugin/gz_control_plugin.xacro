@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="gz_control_plugin">
+        <gazebo>
+            <plugin
+                filename="gz-sim-diff-drive-system"
+                name="gz::sim::systems::DiffDrive">
+
+                <!-- Wheels -->
+                <left_joint>left_wheel_joint</left_joint>
+                <right_joint>right_wheel_joint</right_joint>
+
+                <!-- Kinematics -->
+                <wheel_separation>0.72</wheel_separation>
+                <wheel_radius>0.15</wheel_radius>
+
+                <!-- Limits -->
+                <max_linear_acceleration>1.0</max_linear_acceleration>
+                <max_angular_acceleration>2.0</max_angular_acceleration>
+
+                <!-- Gazebo Transport topics -->
+                <topic>/delivery_robot/cmd_vel</topic>
+                <odom_topic>/delivery_robot/odom</odom_topic>
+                <tf_topic>/delivery_robot/tf</tf_topic>
+
+                <!-- Output -->
+                <odom_publish_frequency>30</odom_publish_frequency>
+                <frame_id>odom</frame_id>
+                <child_frame_id>base_footprint</child_frame_id>
+
+            </plugin>
+        </gazebo>
+    </xacro:macro>
+
+</robot>

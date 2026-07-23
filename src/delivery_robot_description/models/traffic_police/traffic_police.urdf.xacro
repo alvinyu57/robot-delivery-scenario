@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="traffic_police">
+  <xacro:include filename="$(find delivery_robot_description)/models/traffic_police/base.urdf.xacro"/>
+  <xacro:include filename="$(find delivery_robot_description)/models/traffic_police/sensor/tablet.urdf.xacro"/>
+  <xacro:include filename="$(find delivery_robot_description)/models/traffic_police/plugin/gz_static_plugin.xacro"/>
+
+  <xacro:traffic_police_base/>
+  <xacro:observation_tablet/>
+  <xacro:traffic_police_gazebo/>
+</robot>

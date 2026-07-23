@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="observation_tablet">
+    <link name="observation_tablet_link">
+      <visual name="tablet">
+        <geometry>
+          <box size="0.04 0.38 0.28"/>
+        </geometry>
+        <material name="tablet_black">
+          <color rgba="0.04 0.04 0.04 1"/>
+        </material>
+      </visual>
+      <visual name="screen">
+        <origin xyz="0.022 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.006 0.32 0.22"/>
+        </geometry>
+        <material name="screen_blue">
+          <color rgba="0.05 0.45 0.75 1"/>
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="0.04 0.38 0.28"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.5"/>
+        <inertia ixx="0.00908" ixy="0" ixz="0"
+                 iyy="0.00333" iyz="0" izz="0.00608"/>
+      </inertial>
+    </link>
+
+    <joint name="observation_tablet_joint" type="fixed">
+      <parent link="police_base"/>
+      <child link="observation_tablet_link"/>
+      <origin xyz="0.31 0 1.16" rpy="0 0.35 0"/>
+    </joint>
+  </xacro:macro>
+</robot>
