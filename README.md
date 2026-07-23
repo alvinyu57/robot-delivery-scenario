@@ -115,23 +115,25 @@ bool violation
 string evidence_path
 ```
 
-## Run in Docker
+## Scripts
 
 1. Build the Docker image:
 
     ```bash
-    ./build-docker-image.sh
+    ./scripts/build-docker-image.sh
     ```
 
 2. Run the Docker container:
 
     ```bash
-    ./docker-it.sh
+    ./scripts/docker-it.sh
     ```
 
-3. Inside the container, build the workspace:
+3. Build the workspace
 
     ```bash
-    colcon build
+    ./scripts/build-package.sh
+    ./scripts/build-package.sh --docker # Build inside the Docker container
+    ./scripts/build-package.sh --test # Build and run tests
     ```
 
