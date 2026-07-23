@@ -9,11 +9,9 @@
 #include "delivery_robot_interfaces/msg/robot_state.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "sensor_msgs/msg/image.hpp"
 
 namespace
 {
-constexpr char kCameraTopic[] = "/delivery_robot/camera/image_raw";
 constexpr char kStateTopic[] = "/delivery_robot/state";
 
 rcl_interfaces::msg::ParameterDescriptor read_only_parameter(
@@ -47,19 +45,15 @@ public:
       "robot_id", "delivery_robot", read_only_parameter("Identifier included in robot state"));
     frame_id_ = declare_parameter<std::string>(
       "frame_id", "map", read_only_parameter("Coordinate frame for robot state"));
-    camera_frame_id_ = declare_parameter<std::string>(
-      "camera_frame_id", "camera_link", read_only_parameter("Coordinate frame for camera data"));
     linear_speed_ = declare_parameter<double>(
       "linear_speed", 1.0, read_only_parameter("Simulated linear speed in metres per second"));
     angular_speed_ = declare_parameter<double>(
       "angular_speed", 0.0, read_only_parameter("Simulated angular speed in radians per second"));
     const auto publish_rate_hz = declare_parameter<double>(
-      "publish_rate_hz", 10.0, read_only_parameter("Camera and state publication rate in hertz"));
+      "publish_rate_hz", 10.0, read_only_parameter("Robot state publication rate in hertz"));
 
     validate_parameters(publish_rate_hz);
 
-    camera_publisher_ =
-      create_publisher<sensor_msgs::msg::Image>(kCameraTopic, rclcpp::SensorDataQoS());
     state_publisher_ =
       create_publisher<delivery_robot_interfaces::msg::RobotState>(
       kStateTopic, reliable_topic_qos());
@@ -69,11 +63,9 @@ public:
       std::chrono::duration<double>(update_period_seconds_);
     timer_ = create_wall_timer(
       std::chrono::duration_cast<std::chrono::nanoseconds>(timer_period),
-      std::bind(&DeliveryRobotNode::publish_robot_data, this));
+      std::bind(&DeliveryRobotNode::publish_robot_state, this));
 
-    RCLCPP_INFO(
-      get_logger(), "Publishing camera images on %s and robot state on %s",
-      kCameraTopic, kStateTopic);
+    RCLCPP_INFO(get_logger(), "Publishing robot state on %s", kStateTopic);
   }
 
 private:
@@ -84,9 +76,6 @@ private:
     }
     if (frame_id_.empty()) {
       throw std::invalid_argument("frame_id must not be empty");
-    }
-    if (camera_frame_id_.empty()) {
-      throw std::invalid_argument("camera_frame_id must not be empty");
     }
     if (!fits_float32(linear_speed_)) {
       throw std::invalid_argument("linear_speed must be a finite float32 value");
@@ -101,7 +90,7 @@ private:
     }
   }
 
-  void publish_robot_data()
+  void publish_robot_state()
   {
     const auto stamp = now();
 
@@ -119,29 +108,16 @@ private:
     state.angular_speed = static_cast<float>(angular_speed_);
     state.delivery_state = delivery_robot_interfaces::msg::RobotState::DELIVERING;
     state_publisher_->publish(state);
-
-    sensor_msgs::msg::Image image;
-    image.header.stamp = stamp;
-    image.header.frame_id = camera_frame_id_;
-    image.height = 1;
-    image.width = 1;
-    image.encoding = "rgb8";
-    image.is_bigendian = false;
-    image.step = 3;
-    image.data = {0, 0, 0};
-    camera_publisher_->publish(image);
   }
 
   std::string robot_id_;
   std::string frame_id_;
-  std::string camera_frame_id_;
   double linear_speed_;
   double angular_speed_;
   double update_period_seconds_;
   double pose_x_{0.0};
   double pose_theta_{0.0};
 
-  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr camera_publisher_;
   rclcpp::Publisher<delivery_robot_interfaces::msg::RobotState>::SharedPtr state_publisher_;
   rclcpp::TimerBase::SharedPtr timer_;
 };

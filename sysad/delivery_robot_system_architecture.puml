@@ -9,7 +9,9 @@ skinparam defaultTextAlignment center
 
 node "ROS2 Jazzy" as environment {
 
-  package "delivery_robot_node\n\nPublishes:\n1. /delivery_robot/camera/image_raw\n2. /delivery_robot/state" as Robot
+  package "Gazebo camera\nvia ros_gz_bridge" as GazeboCamera
+
+  package "delivery_robot_node\n\nPublishes:\n1. /delivery_robot/state" as Robot
 
   queue "/delivery_robot/camera/image_raw\nsensor_msgs/msg/Image" as CameraTopic
 
@@ -19,7 +21,7 @@ node "ROS2 Jazzy" as environment {
 
   queue "/traffic_police/speed_violation\ntraffic_police_interfaces/msg/SpeedViolation" as ViolationTopic
 
-  Robot --> CameraTopic : publish
+  GazeboCamera --> CameraTopic : publish
   Robot --> StateTopic : publish
 
   CameraTopic --> Police : subscribe
