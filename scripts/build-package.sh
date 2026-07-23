@@ -62,9 +62,11 @@ if [ "$run_in_docker" = true ]; then
 
     docker run --rm "${docker_tty_args[@]}" \
         --user "$(id -u):$(id -g)" \
+        --env HOME=/tmp/delivery-robot-home \
         -v "${WORKSPACE_DIR}:/workspace" \
         -w /workspace \
         delivery-robot:jazzy \
+        bash -c 'mkdir -p "$HOME/.ros" && exec "$@"' bash \
         bash -c "$inner_command"
 
     exit 0
