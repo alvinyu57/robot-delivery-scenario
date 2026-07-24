@@ -1,4 +1,4 @@
-# Header and pose copied from the state sample that caused the event.
+# Header and pose copied from the state sample used for this compliance result.
 std_msgs/Header header
 
 string robot_id
@@ -8,6 +8,7 @@ geometry_msgs/Pose2D pose
 float32 measured_speed
 float32 speed_limit
 
-# True for a confirmed violation; evidence_path is empty when no image was saved.
+# True when measured_speed exceeds speed_limit.
+# evidence_path is empty when no stereo pair was saved.
 bool violation
 string evidence_path

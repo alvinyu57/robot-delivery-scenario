@@ -4,9 +4,12 @@ An imaginary scenario of robot delivery
 
 ## Project Goal
 
-The delivery robot moves autonomously from point A to point B and publishes its camera image and current state.
+The delivery robot moves autonomously from point A to point B and publishes
+stereo camera images and its current state.
 
-The traffic-police node observes the robot remotely, checks whether the robot exceeds the configured speed limit, and publishes a speed-violation event.
+The traffic-police node observes the robot remotely, calculates speed from
+successive timestamped robot poses, checks whether the robot exceeds the
+configured speed limit, and publishes each compliance result.
 
 The traffic-police node is read-only toward robot motion and does not control the robot. The delivery robot cannot subscribe to the speed-violation event.
 
@@ -65,11 +68,12 @@ Contains `traffic_police_node`.
 
 Responsibilities:
 
-- Subscribe to the robot camera image.
+- Subscribe to the robot's left and right camera images.
 - Subscribe to the robot state.
+- Calculate linear speed from successive timestamped poses.
 - Determine the applicable speed limit.
 - Detect speeding.
-- Publish a speed-violation event.
+- Publish both compliant and violating speed-check results.
 - Optionally save an evidence image.
 
 ### `delivery_robot_description`
@@ -79,7 +83,7 @@ Contains the robot descriptions and Gazebo scenario:
 - Xacro descriptions for delivery robot A and traffic police P.
 - Delivery area B.
 - A closed L-shaped room with a small wall near B.
-- Gazebo camera sensor publishing real 800×600 RGB images.
+- Gazebo stereo camera sensors publishing two real 800×600 RGB images.
 - ROS 2 bridges for camera images and metadata, odometry, transforms, clock,
   laser scans, IMU data, and velocity commands.
 - `config/gazebo_gui.config`, which loads Gazebo's lidar-ray visualization.
@@ -111,16 +115,18 @@ robot through known free space, it sends the final goal. Nav2 publishes
 `/delivery_robot/cmd_vel`; `delivery_robot_node` does not directly control the
 simulated wheels.
 
-The Gazebo bridge, rather than `delivery_robot_node`, publishes the camera
-stream on `/delivery_robot/camera/image_raw`.
+The Gazebo bridge, rather than `delivery_robot_node`, publishes the left and
+right camera streams.
 
 ### Gazebo bridge
 
 | Topic | ROS 2 message type | Direction |
 |---|---|---|
 | `/clock` | `rosgraph_msgs/msg/Clock` | Gazebo → ROS 2 |
-| `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Gazebo → ROS 2 |
-| `/delivery_robot/camera/camera_info` | `sensor_msgs/msg/CameraInfo` | Gazebo → ROS 2 |
+| `/delivery_robot/stereo/left/image_raw` | `sensor_msgs/msg/Image` | Gazebo → ROS 2 |
+| `/delivery_robot/stereo/left/camera_info` | `sensor_msgs/msg/CameraInfo` | Gazebo → ROS 2 |
+| `/delivery_robot/stereo/right/image_raw` | `sensor_msgs/msg/Image` | Gazebo → ROS 2 |
+| `/delivery_robot/stereo/right/camera_info` | `sensor_msgs/msg/CameraInfo` | Gazebo → ROS 2 |
 | `/delivery_robot/odom` | `nav_msgs/msg/Odometry` | Gazebo → ROS 2 |
 | `/tf` | `tf2_msgs/msg/TFMessage` | Gazebo → ROS 2 |
 | `/joint_states` | `sensor_msgs/msg/JointState` | Gazebo → ROS 2 |
@@ -133,7 +139,8 @@ stream on `/delivery_robot/camera/image_raw`.
 The simulation launch starts both Gazebo and RViz2 by default.
 
 - Gazebo uses `config/gazebo_gui.config`. Its `VisualizeLidar` plugin renders
-  the rays from the delivery robot's GPU lidar sensor.
+  the rays from the delivery robot's GPU lidar sensor, and two Image Display
+  panels show the left and right stereo streams.
 - RViz2 uses `rviz/navigation.rviz` with `map` as its fixed frame. It displays
   the SLAM Toolbox occupancy map from `/map`, the delivery robot from
   `/robot_description` and `/tf`, the live scan from `/scan`, and Nav2's
@@ -151,14 +158,20 @@ Subscribes:
 
 | Topic | Message type | QoS | Description |
 |---|---|---|---|
-| `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Sensor data: best effort, volatile, depth 5 | Robot camera stream |
-| `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Reliable, volatile, depth 10 | Robot position and speed |
+| `/delivery_robot/stereo/left/image_raw` | `sensor_msgs/msg/Image` | Sensor data: best effort, volatile, depth 5 | Left stereo image |
+| `/delivery_robot/stereo/right/image_raw` | `sensor_msgs/msg/Image` | Sensor data: best effort, volatile, depth 5 | Right stereo image |
+| `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Reliable, volatile, depth 10 | Timestamped robot pose |
 
 Publishes:
 
 | Topic | Message type | QoS | Description |
 |---|---|---|---|
-| `/traffic_police/speed_violation` | `traffic_police_interfaces/msg/SpeedViolation` | Reliable, volatile, depth 10 | Speeding event and evidence information |
+| `/traffic_police/speed_violation` | `traffic_police_interfaces/msg/SpeedViolation` | Reliable, volatile, depth 10 | Calculated speed, limit, compliance result, and evidence information |
+
+The first state sample establishes the starting pose. For every later sample,
+the police divides planar distance travelled by elapsed message time. It
+publishes a result for every valid calculation; `violation` is `true` only
+when the calculated speed is greater than `speed_limit`.
 
 ## Parameters
 
@@ -188,6 +201,7 @@ frontier goals from the live occupancy map; no route waypoints are required.
 | Parameter | Type | Default | Validation |
 |---|---|---|---|
 | `speed_limit` | double | `0.5` | Non-negative finite float32 value |
+| `stereo_pair_tolerance` | double | `0.05` | Non-negative finite number of seconds |
 
 ## Custom Messages
 
@@ -269,9 +283,10 @@ string evidence_path
     ros2 launch delivery_robot_description simulation.launch.py gui:=false rviz:=true
     ```
 
-    The simulation publishes `/delivery_robot/camera/image_raw`,
-    `/delivery_robot/camera/camera_info`, `/delivery_robot/odom`, and
-    `/tf`. It also starts SLAM Toolbox, Nav2, and `delivery_robot_node`. The
-    delivery node explores toward the configured destination after mapping starts.
-    Robot state is copied from Gazebo odometry and changes to `ARRIVED` when Nav2
+    The simulation publishes both `/delivery_robot/stereo/left/...` and
+    `/delivery_robot/stereo/right/...` image and camera-info topics, plus
+    `/delivery_robot/odom` and `/tf`. It also starts SLAM Toolbox, Nav2,
+    `delivery_robot_node`, and `traffic_police_node`. The delivery node
+    explores toward the configured destination after mapping starts. Robot
+    state is copied from Gazebo odometry and changes to `ARRIVED` when Nav2
     successfully reaches the destination.
