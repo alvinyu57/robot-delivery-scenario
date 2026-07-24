@@ -16,7 +16,7 @@
 
     <xacro:imu_xacro xyz="0.0 0.0 0.18"/>
     <xacro:laser_xacro xyz="0.0 0.0 0.28"/>
-    <xacro:camera_xacro xyz="0.36 0.0 0.15"/>
+    <xacro:rgbd_camera_xacro xyz="0.36 0.0 0.15"/>
 
     <xacro:wheel_xacro wheel_name="left_wheel" xyz="0 0.36 -0.12" />
     <xacro:wheel_xacro wheel_name="right_wheel" xyz="0 -0.36 -0.12" />
