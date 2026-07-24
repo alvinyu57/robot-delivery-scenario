@@ -260,18 +260,18 @@ string evidence_path
     GUI=false ./scripts/run-simulation.sh
     ```
 
-`GUI=false` also keeps RViz2 disabled because its default follows the Gazebo
-GUI setting. The two launch arguments can be controlled independently when
-launching directly:
+    `GUI=false` also keeps RViz2 disabled because its default follows the Gazebo
+    GUI setting. The two launch arguments can be controlled independently when
+    launching directly:
 
-```bash
-ros2 launch delivery_robot_description simulation.launch.py rviz:=false
-ros2 launch delivery_robot_description simulation.launch.py gui:=false rviz:=true
-```
+    ```bash
+    ros2 launch delivery_robot_description simulation.launch.py rviz:=false
+    ros2 launch delivery_robot_description simulation.launch.py gui:=false rviz:=true
+    ```
 
-The simulation publishes `/delivery_robot/camera/image_raw`,
-`/delivery_robot/camera/camera_info`, `/delivery_robot/odom`, and
-`/tf`. It also starts SLAM Toolbox, Nav2, and `delivery_robot_node`. The
-delivery node explores toward the configured destination after mapping starts.
-Robot state is copied from Gazebo odometry and changes to `ARRIVED` when Nav2
-successfully reaches the destination.
+    The simulation publishes `/delivery_robot/camera/image_raw`,
+    `/delivery_robot/camera/camera_info`, `/delivery_robot/odom`, and
+    `/tf`. It also starts SLAM Toolbox, Nav2, and `delivery_robot_node`. The
+    delivery node explores toward the configured destination after mapping starts.
+    Robot state is copied from Gazebo odometry and changes to `ARRIVED` when Nav2
+    successfully reaches the destination.
