@@ -18,6 +18,8 @@ def generate_launch_description():
         get_package_share_directory('delivery_robot_description')
     )
     world_path = package_share / 'worlds' / 'world.sdf'
+    gazebo_gui_config = package_share / 'config' / 'gazebo_gui.config'
+    rviz_config = package_share / 'rviz' / 'navigation.rviz'
     robot_xacro = (
         package_share / 'models' / 'delivery_robot'
         / 'delivery_robot.urdf.xacro'
@@ -26,18 +28,25 @@ def generate_launch_description():
         package_share / 'models' / 'traffic_police'
         / 'traffic_police.urdf.xacro'
     )
+    navigation_launch = (
+        Path(get_package_share_directory('delivery_robot'))
+        / 'launch' / 'navigation.launch.py'
+    )
 
     gz_launch = (
         Path(get_package_share_directory('ros_gz_sim'))
         / 'launch' / 'gz_sim.launch.py'
     )
     gui = LaunchConfiguration('gui')
+    rviz = LaunchConfiguration('rviz')
 
     gazebo_gui = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(gz_launch)),
         condition=IfCondition(gui),
         launch_arguments={
-            'gz_args': f'-r -v 3 {world_path}',
+            'gz_args': (
+                f'-r -v 3 --gui-config {gazebo_gui_config} {world_path}'
+            ),
             'on_exit_shutdown': 'true',
         }.items(),
     )
@@ -118,10 +127,33 @@ def generate_launch_description():
                 '/delivery_robot/cmd_vel'
                 '@geometry_msgs/msg/Twist]gz.msgs.Twist'
             ),
+            (
+                '/world/delivery_scenario/model/robot_a/joint_state'
+                '@sensor_msgs/msg/JointState[gz.msgs.Model'
+            ),
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
         ],
         parameters=[{'use_sim_time': True}],
+        remappings=[
+            ('/delivery_robot/tf', '/tf'),
+            (
+                '/world/delivery_scenario/model/robot_a/joint_state',
+                '/joint_states',
+            ),
+        ],
+    )
+    navigation = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(str(navigation_launch)),
+    )
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', str(rviz_config)],
+        parameters=[{'use_sim_time': True}],
+        condition=IfCondition(rviz),
+        output='screen',
     )
 
     return LaunchDescription([
@@ -130,6 +162,11 @@ def generate_launch_description():
             default_value='true',
             description='Start the Gazebo graphical client.',
         ),
+        DeclareLaunchArgument(
+            'rviz',
+            default_value=gui,
+            description='Start RViz2 with the navigation view.',
+        ),
         gazebo_gui,
         gazebo_headless,
         robot_state_publisher,
@@ -137,4 +174,6 @@ def generate_launch_description():
         spawn_robot,
         spawn_police,
         bridge,
+        navigation,
+        rviz_node,
     ])

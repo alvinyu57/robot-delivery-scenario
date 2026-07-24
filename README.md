@@ -1,4 +1,5 @@
 # robot-delivery-scenario
+
 An imaginary scenario of robot delivery
 
 ## Project Goal
@@ -45,8 +46,18 @@ Contains `delivery_robot_node`.
 
 Responsibilities:
 
+- Subscribe to simulated odometry.
+- Explore unknown map frontiers and navigate to one configured destination.
 - Publish the robot pose and motion state.
-- Publish the current delivery state.
+- Change delivery state from `IDLE` to `DELIVERING`, `ARRIVED`, or `FAILED`
+  based on the Nav2 action result.
+
+Navigation is provided by:
+
+- SLAM Toolbox for the live `map → odom` transform and occupancy map.
+- Nav2 NavFn for global planning.
+- Nav2 Regulated Pure Pursuit for path following and `/cmd_vel`.
+- Nav2 NavigateToPose for exploration frontiers and the destination.
 
 ### `traffic_police`
 
@@ -71,16 +82,34 @@ Contains the robot descriptions and Gazebo scenario:
 - Gazebo camera sensor publishing real 800×600 RGB images.
 - ROS 2 bridges for camera images and metadata, odometry, transforms, clock,
   laser scans, IMU data, and velocity commands.
+- `config/gazebo_gui.config`, which loads Gazebo's lidar-ray visualization.
+- `rviz/navigation.rviz`, which presents the SLAM map, robot model and TF,
+  live lidar scan, and Nav2 global plan.
 
 ## Nodes and Topics
 
 ### `delivery_robot_node`
+
+Subscribes:
+
+| Topic | Message type | QoS | Description |
+|---|---|---|---|
+| `/delivery_robot/odom` | `nav_msgs/msg/Odometry` | Sensor data | Simulated robot pose and velocity |
+| `/map` | `nav_msgs/msg/OccupancyGrid` | Reliable, transient local | Live SLAM map used to find reachable frontiers |
 
 Publishes:
 
 | Topic | Message type | QoS | Description |
 |---|---|---|---|
 | `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Reliable, volatile, depth 10 | Robot pose, speed, and delivery state |
+
+Subscribes to the live SLAM occupancy map on `/map` and uses the
+`/navigate_to_pose` Nav2 action. When the destination is outside known
+reachable space, the node selects reachable free cells bordering unknown
+space and explores them. Once the destination is mapped and connected to the
+robot through known free space, it sends the final goal. Nav2 publishes
+`/delivery_robot/cmd_vel`; `delivery_robot_node` does not directly control the
+simulated wheels.
 
 The Gazebo bridge, rather than `delivery_robot_node`, publishes the camera
 stream on `/delivery_robot/camera/image_raw`.
@@ -93,10 +122,28 @@ stream on `/delivery_robot/camera/image_raw`.
 | `/delivery_robot/camera/image_raw` | `sensor_msgs/msg/Image` | Gazebo → ROS 2 |
 | `/delivery_robot/camera/camera_info` | `sensor_msgs/msg/CameraInfo` | Gazebo → ROS 2 |
 | `/delivery_robot/odom` | `nav_msgs/msg/Odometry` | Gazebo → ROS 2 |
-| `/delivery_robot/tf` | `tf2_msgs/msg/TFMessage` | Gazebo → ROS 2 |
+| `/tf` | `tf2_msgs/msg/TFMessage` | Gazebo → ROS 2 |
+| `/joint_states` | `sensor_msgs/msg/JointState` | Gazebo → ROS 2 |
 | `/delivery_robot/cmd_vel` | `geometry_msgs/msg/Twist` | ROS 2 → Gazebo |
 | `/scan` | `sensor_msgs/msg/LaserScan` | Gazebo → ROS 2 |
 | `/imu` | `sensor_msgs/msg/Imu` | Gazebo → ROS 2 |
+
+### Visualization
+
+The simulation launch starts both Gazebo and RViz2 by default.
+
+- Gazebo uses `config/gazebo_gui.config`. Its `VisualizeLidar` plugin renders
+  the rays from the delivery robot's GPU lidar sensor.
+- RViz2 uses `rviz/navigation.rviz` with `map` as its fixed frame. It displays
+  the SLAM Toolbox occupancy map from `/map`, the delivery robot from
+  `/robot_description` and `/tf`, the live scan from `/scan`, and Nav2's
+  current global route from `/plan`.
+- Gazebo wheel positions are bridged on `/joint_states`, allowing
+  `robot_state_publisher` to keep both wheel links attached to the moving
+  robot in RViz2.
+
+The `/plan` display updates as Nav2 plans each exploration leg and the final
+route to B.
 
 ### `traffic_police_node`
 
@@ -123,10 +170,18 @@ silently diverge from the active publishers, subscriptions, or timer.
 | Parameter | Type | Default | Validation |
 |---|---|---|---|
 | `robot_id` | string | `delivery_robot` | Non-empty |
-| `frame_id` | string | `map` | Non-empty |
-| `linear_speed` | double | `1.0` | Finite float32 value |
-| `angular_speed` | double | `0.0` | Finite float32 value |
-| `publish_rate_hz` | double | `10.0` | Greater than 0 and at most 1000 |
+| `mission_frame` | string | `map` | Non-empty |
+| `destination` | double array | Required in `config/navigation.yaml` | Exactly one finite x/y/yaw triple |
+| `mission_start_delay` | double | `5.0` | Non-negative |
+| `occupied_threshold` | integer | `50` | From 1 to 100 |
+| `frontier_min_distance` | double | `0.75` | Non-negative |
+| `frontier_revisit_distance` | double | `0.75` | Non-negative |
+| `obstacle_clearance` | double | `0.40` | Non-negative |
+
+Mission coordinates are not compiled into `delivery_robot_node`. Edit the
+single `destination: [x, y, yaw]` value in
+`delivery_robot/config/navigation.yaml`. The node derives intermediate
+frontier goals from the live occupancy map; no route waypoints are required.
 
 ### `traffic_police_node`
 
@@ -190,6 +245,7 @@ string evidence_path
     ./scripts/build-package.sh
     ./scripts/build-package.sh --docker # Build inside the Docker container
     ./scripts/build-package.sh --test # Build and run tests
+    ./scripts/build-package.sh --docker --test # Docker build and tests
     ```
 
 4. Start the Gazebo scenario from the development container:
@@ -204,7 +260,18 @@ string evidence_path
     GUI=false ./scripts/run-simulation.sh
     ```
 
+`GUI=false` also keeps RViz2 disabled because its default follows the Gazebo
+GUI setting. The two launch arguments can be controlled independently when
+launching directly:
+
+```bash
+ros2 launch delivery_robot_description simulation.launch.py rviz:=false
+ros2 launch delivery_robot_description simulation.launch.py gui:=false rviz:=true
+```
+
 The simulation publishes `/delivery_robot/camera/image_raw`,
 `/delivery_robot/camera/camera_info`, `/delivery_robot/odom`, and
-`/delivery_robot/tf`. Send `geometry_msgs/msg/Twist` commands to
-`/delivery_robot/cmd_vel` to move robot A.
+`/tf`. It also starts SLAM Toolbox, Nav2, and `delivery_robot_node`. The
+delivery node explores toward the configured destination after mapping starts.
+Robot state is copied from Gazebo odometry and changes to `ARRIVED` when Nav2
+successfully reaches the destination.

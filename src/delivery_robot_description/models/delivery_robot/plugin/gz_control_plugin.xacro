@@ -31,6 +31,15 @@
                 <child_frame_id>base_footprint</child_frame_id>
 
             </plugin>
+
+            <!--
+              Publish the continuous wheel joint positions. The launch bridge
+              remaps this Gazebo topic to /joint_states so
+              robot_state_publisher can complete the wheel TF chain in RViz.
+            -->
+            <plugin
+                filename="gz-sim-joint-state-publisher-system"
+                name="gz::sim::systems::JointStatePublisher"/>
         </gazebo>
     </xacro:macro>
 
