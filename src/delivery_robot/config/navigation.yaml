@@ -1,0 +1,13 @@
+delivery_robot_node:
+  ros__parameters:
+    use_sim_time: true
+    robot_id: delivery_robot
+    mission_frame: map
+    # One x, y, yaw destination in mission_frame. The node explores reachable
+    # map frontiers automatically until this destination is mapped.
+    destination: [9.0, -8.0, 0.0]
+    mission_start_delay: 5.0
+    occupied_threshold: 50
+    frontier_min_distance: 0.75
+    frontier_revisit_distance: 0.75
+    obstacle_clearance: 0.40

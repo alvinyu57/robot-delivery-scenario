@@ -8,8 +8,15 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(delivery_robot_interfaces REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav2_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 add_executable(delivery_robot_node src/delivery_robot_node.cpp)
 target_include_directories(delivery_robot_node PUBLIC
@@ -19,12 +26,24 @@ target_compile_features(delivery_robot_node PUBLIC c_std_99 cxx_std_17)  # Requi
 ament_target_dependencies(
   delivery_robot_node
   "delivery_robot_interfaces"
+  "geometry_msgs"
+  "nav2_msgs"
+  "nav_msgs"
   "rcl_interfaces"
   "rclcpp"
+  "rclcpp_action"
+  "tf2"
+  "tf2_geometry_msgs"
+  "tf2_ros"
 )
 
 install(TARGETS delivery_robot_node
   DESTINATION lib/${PROJECT_NAME})
+
+install(
+  DIRECTORY config launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

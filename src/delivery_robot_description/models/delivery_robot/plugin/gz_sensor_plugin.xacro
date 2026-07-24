@@ -11,6 +11,7 @@
         <gazebo reference="laser_link">
             <sensor name="laserscan" type="gpu_lidar">
                 <topic>/scan</topic>
+                <gz_frame_id>laser_link</gz_frame_id>
                 <always_on>true</always_on>
                 <visualize>true</visualize>
                 <update_rate>5</update_rate>
@@ -41,6 +42,7 @@
         <gazebo reference="imu_link">
             <sensor name="imu_sensor" type="imu">
                 <topic>/imu</topic>
+                <gz_frame_id>imu_link</gz_frame_id>
                 <always_on>true</always_on>
                 <update_rate>1000</update_rate>
                 <imu>
@@ -103,6 +105,7 @@
         <gazebo reference="camera_link">
             <sensor name="camera_sensor" type="camera">
                 <topic>/delivery_robot/camera/image_raw</topic>
+                <gz_frame_id>camera_link</gz_frame_id>
                 <always_on>true</always_on>
                 <update_rate>10</update_rate>
                 <camera name="camera">
