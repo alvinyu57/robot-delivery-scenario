@@ -7,13 +7,24 @@ skinparam componentStyle rectangle
 skinparam linetype ortho
 skinparam defaultTextAlignment center
 
-node "ROS2 Jazzy" as environment {
+node "ROS 2 Jazzy" as environment {
 
-  package "Gazebo camera\nvia ros_gz_bridge" as GazeboCamera
+  package "Gazebo simulation\n\nDelivery robot sensors\nand wheel actuators" as Gazebo
 
-  package "delivery_robot_node\n\nPublishes:\n1. /delivery_robot/state" as Robot
+  package "ros_gz_bridge" as Bridge
 
   queue "/delivery_robot/camera/image_raw\nsensor_msgs/msg/Image" as CameraTopic
+  queue "/delivery_robot/odom\nnav_msgs/msg/Odometry" as OdomTopic
+  queue "/scan\nsensor_msgs/msg/LaserScan" as ScanTopic
+  queue "/delivery_robot/cmd_vel\ngeometry_msgs/msg/Twist" as CmdVelTopic
+
+  package "SLAM Toolbox\n\nBuilds the occupancy map\nPublishes map -> odom TF" as Slam
+  queue "/map\nnav_msgs/msg/OccupancyGrid" as MapTopic
+  queue "/tf\nmap -> odom -> base_footprint" as TfTopic
+
+  package "delivery_robot_node\n\nDestination mission coordinator\nDetects reachable frontiers\nPublishes robot state" as Robot
+
+  package "Nav2\n\nPlans only through known space\nNavigates to frontier or destination" as Nav2
 
   queue "/delivery_robot/state\ndelivery_robot_interfaces/msg/RobotState" as StateTopic
 
@@ -21,20 +32,53 @@ node "ROS2 Jazzy" as environment {
 
   queue "/traffic_police/speed_violation\ntraffic_police_interfaces/msg/SpeedViolation" as ViolationTopic
 
-  GazeboCamera --> CameraTopic : publish
-  Robot --> StateTopic : publish
+  Gazebo --> Bridge : sensor data
+  Bridge --> CameraTopic : publish
+  Bridge --> OdomTopic : publish
+  Bridge --> ScanTopic : publish
 
+  OdomTopic --> Robot : subscribe
+  OdomTopic --> Nav2 : subscribe
+  ScanTopic --> Slam : subscribe
+  ScanTopic --> Nav2 : obstacle data
+
+  Slam --> MapTopic : publish
+  Slam --> TfTopic : publish map -> odom
+  Bridge --> TfTopic : publish odom -> base
+  MapTopic --> Robot : detect known space\nand reachable frontiers
+  MapTopic --> Nav2 : global costmap
+  TfTopic --> Robot : transform robot pose
+  TfTopic --> Nav2 : transform poses
+
+  Robot --> Nav2 : /navigate_to_pose action\nfrontier or final destination
+  Nav2 --> CmdVelTopic : publish
+  CmdVelTopic --> Bridge : subscribe
+  Bridge --> Gazebo : wheel command
+
+  Robot --> StateTopic : publish
   CameraTopic --> Police : subscribe
   StateTopic --> Police : subscribe
-
   Police --> ViolationTopic : publish
 
   note top of Robot
-  RobotState contains:
-  - robot_id
-  - pose
-  - linear_speed
-  - angular_speed
+  Configuration contains one destination:
+  [x, y, yaw] in the map frame.
+
+  If the destination is not yet reachable
+  through known free space, the node sends
+  safe frontier goals to expand the map.
+
+  Delivery state:
+  IDLE -> DELIVERING -> ARRIVED or FAILED
+
+  RobotState also contains robot_id, pose,
+  linear_speed, and angular_speed.
+  end note
+
+  note top of Nav2
+  The global planner does not traverse
+  unknown cells. Intermediate goals are
+  derived from the live occupancy map.
   end note
 
   note top of Police
@@ -44,10 +88,6 @@ node "ROS2 Jazzy" as environment {
   The robot does not subscribe to any
   traffic-police topic.
   end note
-
-
 }
-
-
 
 @enduml

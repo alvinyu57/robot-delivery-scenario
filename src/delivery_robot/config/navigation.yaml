@@ -5,7 +5,7 @@ delivery_robot_node:
     mission_frame: map
     # One x, y, yaw destination in mission_frame. The node explores reachable
     # map frontiers automatically until this destination is mapped.
-    destination: [9.0, -7.5, 0.0]
+    destination: [8.0, -8.0, 0.0]
     mission_start_delay: 5.0
     occupied_threshold: 50
     frontier_min_distance: 0.75
