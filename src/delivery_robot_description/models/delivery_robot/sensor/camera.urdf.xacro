@@ -2,72 +2,35 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:include filename="$(find delivery_robot_description)/models/delivery_robot/common_inertia.xacro" />
 
-    <xacro:macro name="stereo_camera_xacro" params="xyz baseline">
-        <link name="stereo_camera_link">
+    <xacro:macro name="rgbd_camera_xacro" params="xyz">
+        <link name="rgbd_camera_link">
             <visual>
                 <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
                 <geometry>
-                    <box size="0.12 ${baseline + 0.10} 0.10"/>
+                    <box size="0.12 0.20 0.10"/>
                 </geometry>
                 <material name="black">
                     <color rgba="0.0 0.0 0.0 0.8"/>
                 </material>
             </visual>
             <collision>
-                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
                 <geometry>
-                    <box size="0.12 ${baseline + 0.10} 0.10"/>
+                    <box size="0.12 0.20 0.10"/>
                 </geometry>
             </collision>
-            <xacro:box_inertia m="0.2" w="0.12" h="${baseline + 0.10}" d="0.10" />
+            <xacro:box_inertia m="0.2" w="0.12" h="0.20" d="0.10"/>
         </link>
 
-        <link name="left_camera_link">
-            <visual>
-                <geometry>
-                    <cylinder radius="0.035" length="0.04"/>
-                </geometry>
-                <origin xyz="0.04 0 0" rpy="0 ${pi / 2.0} 0"/>
-                <material name="camera_lens">
-                    <color rgba="0.05 0.10 0.20 1.0"/>
-                </material>
-            </visual>
-        </link>
-        <link name="right_camera_link">
-            <visual>
-                <geometry>
-                    <cylinder radius="0.035" length="0.04"/>
-                </geometry>
-                <origin xyz="0.04 0 0" rpy="0 ${pi / 2.0} 0"/>
-                <material name="camera_lens"/>
-            </visual>
-        </link>
-        <link name="left_camera_optical_link"/>
-        <link name="right_camera_optical_link"/>
+        <link name="rgbd_camera_optical_link"/>
 
-        <joint name="stereo_camera_joint" type="fixed">
+        <joint name="rgbd_camera_joint" type="fixed">
             <parent link="base_link"/>
-            <child link="stereo_camera_link"/>
+            <child link="rgbd_camera_link"/>
             <origin xyz="${xyz}" rpy="0.0 0.0 0.0"/>
         </joint>
-        <joint name="left_camera_joint" type="fixed">
-            <parent link="stereo_camera_link"/>
-            <child link="left_camera_link"/>
-            <origin xyz="0 ${baseline / 2.0} 0" rpy="0.0 0.0 0.0"/>
-        </joint>
-        <joint name="right_camera_joint" type="fixed">
-            <parent link="stereo_camera_link"/>
-            <child link="right_camera_link"/>
-            <origin xyz="0 ${-baseline / 2.0} 0" rpy="0.0 0.0 0.0"/>
-        </joint>
-        <joint name="left_camera_optical_joint" type="fixed">
-            <parent link="left_camera_link"/>
-            <child link="left_camera_optical_link"/>
-            <origin xyz="0 0 0" rpy="${-pi / 2.0} 0 ${-pi / 2.0}"/>
-        </joint>
-        <joint name="right_camera_optical_joint" type="fixed">
-            <parent link="right_camera_link"/>
-            <child link="right_camera_optical_link"/>
+        <joint name="rgbd_camera_optical_joint" type="fixed">
+            <parent link="rgbd_camera_link"/>
+            <child link="rgbd_camera_optical_link"/>
             <origin xyz="0 0 0" rpy="${-pi / 2.0} 0 ${-pi / 2.0}"/>
         </joint>
     </xacro:macro>

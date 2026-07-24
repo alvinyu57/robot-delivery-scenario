@@ -114,20 +114,16 @@ def generate_launch_description():
         arguments=[
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             (
-                '/delivery_robot/stereo/left/image_raw'
+                '/delivery_robot/rgbd/image'
                 '@sensor_msgs/msg/Image[gz.msgs.Image'
             ),
             (
-                '/delivery_robot/stereo/left/camera_info'
+                '/delivery_robot/rgbd/camera_info'
                 '@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo'
             ),
             (
-                '/delivery_robot/stereo/right/image_raw'
+                '/delivery_robot/rgbd/depth_image'
                 '@sensor_msgs/msg/Image[gz.msgs.Image'
-            ),
-            (
-                '/delivery_robot/stereo/right/camera_info'
-                '@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo'
             ),
             '/delivery_robot/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
             '/delivery_robot/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',

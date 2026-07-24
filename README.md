@@ -5,11 +5,11 @@ An imaginary scenario of robot delivery
 ## Project Goal
 
 The delivery robot moves autonomously from point A to point B and publishes
-stereo camera images and its current state.
+RGB-D color and depth images plus its current state.
 
-The traffic-police node observes the robot remotely, calculates speed from
-successive timestamped robot poses, checks whether the robot exceeds the
-configured speed limit, and publishes each compliance result.
+The traffic-police node observes the robot remotely, calculates speed with
+RGB-D visual odometry, checks whether the robot exceeds the configured speed
+limit, and publishes each compliance result.
 
 The traffic-police node is read-only toward robot motion and does not control the robot. The delivery robot cannot subscribe to the speed-violation event.
 
@@ -68,9 +68,10 @@ Contains `traffic_police_node`.
 
 Responsibilities:
 
-- Subscribe to the robot's left and right camera images.
-- Subscribe to the robot state.
-- Calculate linear speed from successive timestamped poses.
+- Subscribe to synchronized RGB, depth, and camera-calibration data.
+- Track RGB features and reconstruct their positions with the depth image.
+- Calculate linear speed from successive 3D camera poses.
+- Subscribe to robot state only for report identity and pose metadata.
 - Determine the applicable speed limit.
 - Detect speeding.
 - Publish both compliant and violating speed-check results.
@@ -83,7 +84,7 @@ Contains the robot descriptions and Gazebo scenario:
 - Xacro descriptions for delivery robot A and traffic police P.
 - Delivery area B.
 - A closed L-shaped room with a small wall near B.
-- Gazebo stereo camera sensors publishing two real 800×600 RGB images.
+- A Gazebo RGB-D camera publishing aligned 800×600 color and depth images.
 - ROS 2 bridges for camera images and metadata, odometry, transforms, clock,
   laser scans, IMU data, and velocity commands.
 - `config/gazebo_gui.config`, which loads Gazebo's lidar-ray visualization.
@@ -115,18 +116,17 @@ robot through known free space, it sends the final goal. Nav2 publishes
 `/delivery_robot/cmd_vel`; `delivery_robot_node` does not directly control the
 simulated wheels.
 
-The Gazebo bridge, rather than `delivery_robot_node`, publishes the left and
-right camera streams.
+The Gazebo bridge, rather than `delivery_robot_node`, publishes the RGB-D
+streams.
 
 ### Gazebo bridge
 
 | Topic | ROS 2 message type | Direction |
 |---|---|---|
 | `/clock` | `rosgraph_msgs/msg/Clock` | Gazebo → ROS 2 |
-| `/delivery_robot/stereo/left/image_raw` | `sensor_msgs/msg/Image` | Gazebo → ROS 2 |
-| `/delivery_robot/stereo/left/camera_info` | `sensor_msgs/msg/CameraInfo` | Gazebo → ROS 2 |
-| `/delivery_robot/stereo/right/image_raw` | `sensor_msgs/msg/Image` | Gazebo → ROS 2 |
-| `/delivery_robot/stereo/right/camera_info` | `sensor_msgs/msg/CameraInfo` | Gazebo → ROS 2 |
+| `/delivery_robot/rgbd/image` | `sensor_msgs/msg/Image` | Gazebo → ROS 2 |
+| `/delivery_robot/rgbd/depth_image` | `sensor_msgs/msg/Image` | Gazebo → ROS 2 |
+| `/delivery_robot/rgbd/camera_info` | `sensor_msgs/msg/CameraInfo` | Gazebo → ROS 2 |
 | `/delivery_robot/odom` | `nav_msgs/msg/Odometry` | Gazebo → ROS 2 |
 | `/tf` | `tf2_msgs/msg/TFMessage` | Gazebo → ROS 2 |
 | `/joint_states` | `sensor_msgs/msg/JointState` | Gazebo → ROS 2 |
@@ -140,7 +140,7 @@ The simulation launch starts both Gazebo and RViz2 by default.
 
 - Gazebo uses `config/gazebo_gui.config`. Its `VisualizeLidar` plugin renders
   the rays from the delivery robot's GPU lidar sensor, and two Image Display
-  panels show the left and right stereo streams.
+  panels show the RGB-D color and depth streams.
 - RViz2 uses `rviz/navigation.rviz` with `map` as its fixed frame. It displays
   the SLAM Toolbox occupancy map from `/map`, the delivery robot from
   `/robot_description` and `/tf`, the live scan from `/scan`, and Nav2's
@@ -158,9 +158,10 @@ Subscribes:
 
 | Topic | Message type | QoS | Description |
 |---|---|---|---|
-| `/delivery_robot/stereo/left/image_raw` | `sensor_msgs/msg/Image` | Sensor data: best effort, volatile, depth 5 | Left stereo image |
-| `/delivery_robot/stereo/right/image_raw` | `sensor_msgs/msg/Image` | Sensor data: best effort, volatile, depth 5 | Right stereo image |
-| `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Reliable, volatile, depth 10 | Timestamped robot pose |
+| `/delivery_robot/rgbd/image` | `sensor_msgs/msg/Image` | Sensor data: best effort, volatile, depth 5 | RGB image used for feature tracking |
+| `/delivery_robot/rgbd/depth_image` | `sensor_msgs/msg/Image` | Sensor data: best effort, volatile, depth 5 | Aligned metric depth image |
+| `/delivery_robot/rgbd/camera_info` | `sensor_msgs/msg/CameraInfo` | Sensor data: best effort, volatile, depth 5 | Camera intrinsics |
+| `/delivery_robot/state` | `delivery_robot_interfaces/msg/RobotState` | Reliable, volatile, depth 10 | Robot ID and report pose metadata |
 
 Publishes:
 
@@ -168,10 +169,13 @@ Publishes:
 |---|---|---|---|
 | `/traffic_police/speed_violation` | `traffic_police_interfaces/msg/SpeedViolation` | Reliable, volatile, depth 10 | Calculated speed, limit, compliance result, and evidence information |
 
-The first state sample establishes the starting pose. For every later sample,
-the police divides planar distance travelled by elapsed message time. It
-publishes a result for every valid calculation; `violation` is `true` only
-when the calculated speed is greater than `speed_limit`.
+For each synchronized frame pair, the police tracks image features between
+successive RGB frames, back-projects valid matches into 3D using aligned
+depth and camera intrinsics, and robustly estimates the camera translation.
+It divides translation magnitude by RGB-D elapsed time and publishes every
+valid result. `violation` is `true` only when that RGB-D-derived speed is
+greater than `speed_limit`. Robot-state velocity is not used in this
+calculation.
 
 ## Parameters
 
@@ -201,7 +205,7 @@ frontier goals from the live occupancy map; no route waypoints are required.
 | Parameter | Type | Default | Validation |
 |---|---|---|---|
 | `speed_limit` | double | `0.5` | Non-negative finite float32 value |
-| `stereo_pair_tolerance` | double | `0.05` | Non-negative finite number of seconds |
+| `rgbd_pair_tolerance` | double | `0.03` | Non-negative finite number of seconds |
 
 ## Custom Messages
 
@@ -283,9 +287,10 @@ string evidence_path
     ros2 launch delivery_robot_description simulation.launch.py gui:=false rviz:=true
     ```
 
-    The simulation publishes both `/delivery_robot/stereo/left/...` and
-    `/delivery_robot/stereo/right/...` image and camera-info topics, plus
-    `/delivery_robot/odom` and `/tf`. It also starts SLAM Toolbox, Nav2,
+    The simulation publishes `/delivery_robot/rgbd/image`,
+    `/delivery_robot/rgbd/depth_image`, and
+    `/delivery_robot/rgbd/camera_info`, plus `/delivery_robot/odom` and
+    `/tf`. It also starts SLAM Toolbox, Nav2,
     `delivery_robot_node`, and `traffic_police_node`. The delivery node
     explores toward the configured destination after mapping starts. Robot
     state is copied from Gazebo odometry and changes to `ARRIVED` when Nav2

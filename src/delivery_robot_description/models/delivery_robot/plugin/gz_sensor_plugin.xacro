@@ -102,15 +102,19 @@
             </sensor>
         </gazebo>
 
-        <gazebo reference="left_camera_link">
-            <sensor name="left_camera_sensor" type="camera">
-                <topic>/delivery_robot/stereo/left/image_raw</topic>
-                <gz_frame_id>left_camera_optical_link</gz_frame_id>
+        <gazebo reference="rgbd_camera_link">
+            <sensor name="rgbd_camera_sensor" type="rgbd_camera">
+                <!--
+                  RGB-D sensors append /image and /depth_image to this base
+                  topic. Both streams share the same optical frame and clock.
+                -->
+                <topic>/delivery_robot/rgbd</topic>
+                <gz_frame_id>rgbd_camera_optical_link</gz_frame_id>
                 <always_on>true</always_on>
                 <visualize>true</visualize>
                 <update_rate>10</update_rate>
-                <camera name="left_camera">
-                    <camera_info_topic>/delivery_robot/stereo/left/camera_info</camera_info_topic>
+                <camera name="rgbd_camera">
+                    <camera_info_topic>/delivery_robot/rgbd/camera_info</camera_info_topic>
                     <horizontal_fov>1.5009831567</horizontal_fov>
                     <image>
                         <width>800</width>
@@ -121,37 +125,12 @@
                         <near>0.12</near>
                         <far>8.0</far>
                     </clip>
-                    <distortion>
-                        <k1>0.0</k1>
-                        <k2>0.0</k2>
-                        <k3>0.0</k3>
-                        <p1>0.0</p1>
-                        <p2>0.0</p2>
-                        <center>0.5 0.5</center>
-                    </distortion>
-                </camera>
-            </sensor>
-        </gazebo>
-
-        <gazebo reference="right_camera_link">
-            <sensor name="right_camera_sensor" type="camera">
-                <topic>/delivery_robot/stereo/right/image_raw</topic>
-                <gz_frame_id>right_camera_optical_link</gz_frame_id>
-                <always_on>true</always_on>
-                <visualize>true</visualize>
-                <update_rate>10</update_rate>
-                <camera name="right_camera">
-                    <camera_info_topic>/delivery_robot/stereo/right/camera_info</camera_info_topic>
-                    <horizontal_fov>1.5009831567</horizontal_fov>
-                    <image>
-                        <width>800</width>
-                        <height>600</height>
-                        <format>R8G8B8</format>
-                    </image>
-                    <clip>
-                        <near>0.12</near>
-                        <far>8.0</far>
-                    </clip>
+                    <depth_camera>
+                        <clip>
+                            <near>0.12</near>
+                            <far>8.0</far>
+                        </clip>
+                    </depth_camera>
                     <distortion>
                         <k1>0.0</k1>
                         <k2>0.0</k2>

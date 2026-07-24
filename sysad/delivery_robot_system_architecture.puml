@@ -13,8 +13,9 @@ node "ROS 2 Jazzy" as environment {
 
   package "ros_gz_bridge" as Bridge
 
-  queue "/delivery_robot/stereo/left/image_raw\nsensor_msgs/msg/Image" as LeftCameraTopic
-  queue "/delivery_robot/stereo/right/image_raw\nsensor_msgs/msg/Image" as RightCameraTopic
+  queue "/delivery_robot/rgbd/image\nsensor_msgs/msg/Image" as ColorTopic
+  queue "/delivery_robot/rgbd/depth_image\nsensor_msgs/msg/Image" as DepthTopic
+  queue "/delivery_robot/rgbd/camera_info\nsensor_msgs/msg/CameraInfo" as CameraInfoTopic
   queue "/delivery_robot/odom\nnav_msgs/msg/Odometry" as OdomTopic
   queue "/scan\nsensor_msgs/msg/LaserScan" as ScanTopic
   queue "/delivery_robot/cmd_vel\ngeometry_msgs/msg/Twist" as CmdVelTopic
@@ -29,13 +30,14 @@ node "ROS 2 Jazzy" as environment {
 
   queue "/delivery_robot/state\ndelivery_robot_interfaces/msg/RobotState" as StateTopic
 
-  package "traffic_police_node\n\nSubscribes:\n1. left/right stereo images\n2. /delivery_robot/state\n\nCalculates speed from pose/time\nPublishes every compliance result" as Police
+  package "traffic_police_node\n\nSubscribes:\n1. RGB-D and calibration\n2. /delivery_robot/state metadata\n\nCalculates speed with RGB-D odometry\nPublishes every compliance result" as Police
 
   queue "/traffic_police/speed_violation\ntraffic_police_interfaces/msg/SpeedViolation" as ViolationTopic
 
   Gazebo --> Bridge : sensor data
-  Bridge --> LeftCameraTopic : publish
-  Bridge --> RightCameraTopic : publish
+  Bridge --> ColorTopic : publish
+  Bridge --> DepthTopic : publish
+  Bridge --> CameraInfoTopic : publish
   Bridge --> OdomTopic : publish
   Bridge --> ScanTopic : publish
 
@@ -58,8 +60,9 @@ node "ROS 2 Jazzy" as environment {
   Bridge --> Gazebo : wheel command
 
   Robot --> StateTopic : publish
-  LeftCameraTopic --> Police : subscribe
-  RightCameraTopic --> Police : subscribe
+  ColorTopic --> Police : subscribe
+  DepthTopic --> Police : subscribe
+  CameraInfoTopic --> Police : subscribe
   StateTopic --> Police : subscribe
   Police --> ViolationTopic : publish
 
@@ -88,8 +91,8 @@ node "ROS 2 Jazzy" as environment {
   The speed limit is a local parameter
   of traffic_police_node.
 
-  Linear speed is calculated from
-  consecutive timestamped robot poses.
+  Linear speed is calculated from RGB
+  feature motion and aligned metric depth.
 
   The robot does not subscribe to any
   traffic-police topic.
