@@ -9,6 +9,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <exec_depend>ament_index_python</exec_depend>
   <exec_depend>delivery_robot</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>launch</exec_depend>
@@ -24,8 +25,15 @@
   <exec_depend>traffic_police</exec_depend>
   <exec_depend>xacro</exec_depend>
 
+  <test_depend>ament_cmake_ros</test_depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+  <test_depend>delivery_robot_interfaces</test_depend>
+  <test_depend>gz_sim_vendor</test_depend>
+  <test_depend>gz_tools_vendor</test_depend>
+  <test_depend>launch_testing</test_depend>
+  <test_depend>launch_testing_ament_cmake</test_depend>
+  <test_depend>rclpy</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -14,7 +14,9 @@ install(
 )
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_ros REQUIRED)
   find_package(ament_lint_auto REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
   # the following line skips the linter which checks for copyrights
   # comment the line when a copyright and license is added to all source files
   set(ament_cmake_copyright_FOUND TRUE)
@@ -23,6 +25,17 @@ if(BUILD_TESTING)
   # a copyright and license is added to all source files
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
+
+  add_launch_test(
+    test/test_gazebo_delivery_mission.py
+    TARGET test_gazebo_delivery_mission
+    TIMEOUT 600
+    RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py"
+  )
+  set_tests_properties(
+    test_gazebo_delivery_mission
+    PROPERTIES RUN_SERIAL TRUE
+  )
 endif()
 
 ament_package()

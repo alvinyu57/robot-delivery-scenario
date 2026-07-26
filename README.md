@@ -251,10 +251,23 @@ string evidence_path
     ./scripts/build-docker-image.sh
     ```
 
-2. Run the Docker container:
+2. Run the Docker container with one of these modes:
+
+    GUI mode forwards the host X11/Xwayland authorization cookie and GPU
+    device groups:
 
     ```bash
-    ./scripts/docker-it.sh
+    ./scripts/docker-it.sh --gui
+    ```
+
+    `XAUTHORITY` must identify a readable host authorization file. This is
+    normally already set by Ubuntu for both Xorg and Wayland sessions. The
+    cookie is mounted read-only; no `xhost` permission change is required.
+
+    Headless mode does not require `DISPLAY`, X11, or `/dev/dri`:
+
+    ```bash
+    ./scripts/docker-it.sh --headless
     ```
 
 3. Build the workspace
@@ -272,15 +285,21 @@ string evidence_path
     ./scripts/run-simulation.sh
     ```
 
-    Set `GUI=false` for a headless server:
+    The container mode sets `GUI` automatically. In the headless container,
+    this command starts Gazebo server-only and keeps RViz2 disabled:
+
+    ```bash
+    ./scripts/run-simulation.sh
+    ```
+
+    When launching outside `docker-it.sh`, set `GUI=false` explicitly for the
+    same headless behavior:
 
     ```bash
     GUI=false ./scripts/run-simulation.sh
     ```
 
-    `GUI=false` also keeps RViz2 disabled because its default follows the Gazebo
-    GUI setting. The two launch arguments can be controlled independently when
-    launching directly:
+    The Gazebo and RViz launch arguments can also be controlled independently:
 
     ```bash
     ros2 launch delivery_robot_description simulation.launch.py rviz:=false
